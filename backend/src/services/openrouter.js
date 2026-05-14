@@ -4,7 +4,7 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 async function callOpenRouter(messages, options = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const defaultModel = process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5';
+  const defaultModel = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
 
   if (!apiKey || apiKey === 'your_openrouter_api_key_here') {
     throw new Error('OpenRouter API key not configured');
@@ -141,8 +141,8 @@ function parseJsonResponse(response) {
 
 // 1. Generate complete itinerary
 async function generateItinerary(fromLocation, destination, days, budget, interests) {
-  // Limit days to avoid token overflow
-  const limitedDays = Math.min(days, 5);
+  // Cap at 14 days; for very long trips split into chunks of 7 if needed
+  const limitedDays = Math.min(days, 14);
 
   const messages = [
     {
@@ -153,7 +153,7 @@ async function generateItinerary(fromLocation, destination, days, budget, intere
       role: 'user',
       content: `Create a ${limitedDays}-day trip from ${fromLocation || 'USA'} to ${destination}. Budget: $${budget}. Interests: ${interests.join(', ')}.
 
-Return this JSON (2-3 activities per day):
+Return this JSON (2-3 activities per day, covering all ${limitedDays} days):
 {
   "fromLocation": "${fromLocation || 'USA'}",
   "destination": "${destination}",
@@ -821,6 +821,123 @@ async function matchHotels(destination, preferences, budget, dates, travelers) {
   return parseJsonResponse(response);
 }
 
+// 17. Packing List Optimizer (weather + activities aware)
+async function optimizePackingList(destination, activities, weatherSummary, duration) {
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a travel packing optimization expert. Create context-aware packing lists based on weather and planned activities. Respond with valid JSON only.'
+    },
+    {
+      role: 'user',
+      content: `Optimize a packing list for ${destination} (${duration} days).
+Weather: ${weatherSummary || 'typical seasonal'}
+Planned activities: ${(activities || []).join(', ') || 'general sightseeing'}
+
+Return JSON:
+{
+  "destination": "${destination}",
+  "duration": ${duration},
+  "weatherBasedRecommendations": ["item1", "item2"],
+  "activityBasedRecommendations": ["item1", "item2"],
+  "categories": {
+    "essential_documents": [{"item": "name", "priority": "must-have", "note": "reason"}],
+    "clothing": [{"item": "name", "quantity": 1, "priority": "must-have", "weather_reason": "reason"}],
+    "activity_gear": [{"item": "name", "for_activity": "activity", "priority": "important"}],
+    "toiletries": [{"item": "name", "quantity": 1, "priority": "must-have"}],
+    "electronics": [{"item": "name", "priority": "important", "note": "note"}],
+    "medications_safety": [{"item": "name", "priority": "must-have", "note": "note"}]
+  },
+  "leave_behind": ["item you don't need based on context"],
+  "weight_saving_tips": ["tip1", "tip2"],
+  "packing_order": "advice on order to pack items"
+}`
+    }
+  ];
+
+  const response = await callOpenRouter(messages, { maxTokens: 4000 });
+  return parseJsonResponse(response);
+}
+
+// 18. Trip Inspiration (personalized destination recommendations)
+async function tripInspiration(budget, duration, vibe, pastDestinations) {
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a personalized travel inspiration expert. Recommend destinations based on user preferences and past travel. Respond with valid JSON only.'
+    },
+    {
+      role: 'user',
+      content: `Recommend travel destinations based on:
+Budget: $${budget}
+Duration: ${duration} days
+Vibe: ${vibe} (beach/adventure/city/culture)
+Past destinations: ${(pastDestinations || []).join(', ') || 'none yet'}
+
+Avoid recommending places already visited. Return JSON:
+{
+  "recommendations": [
+    {
+      "name": "Destination, Country",
+      "match_score": 95,
+      "highlights": ["highlight1", "highlight2", "highlight3"],
+      "best_season": "months to visit",
+      "budget_estimate": {"low": 800, "mid": 1200, "high": 2000},
+      "vibe_match": "why this matches the vibe",
+      "unique_experiences": ["experience1", "experience2"],
+      "getting_there": "typical flight info"
+    }
+  ],
+  "hidden_gems": [{"name": "destination", "why": "reason", "budget_estimate": 1000}],
+  "tips": ["general travel tip"]
+}`
+    }
+  ];
+
+  const response = await callOpenRouter(messages, { maxTokens: 4000 });
+  return parseJsonResponse(response);
+}
+
+// 19. Day-Of Live Plan Adjuster
+async function dayOfPlan(currentActivities, currentLocation, currentTime, delays) {
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a real-time travel itinerary adjuster. Help travelers adapt their plans to current conditions. Respond with valid JSON only.'
+    },
+    {
+      role: 'user',
+      content: `Adjust today's travel plan:
+Current location: ${currentLocation || 'unknown'}
+Current time: ${currentTime || new Date().toLocaleTimeString()}
+Planned activities: ${JSON.stringify(currentActivities || [])}
+Delays/issues: ${delays || 'none'}
+
+Return adjusted schedule JSON:
+{
+  "adjusted_schedule": [
+    {
+      "time": "HH:MM",
+      "activity": "activity name",
+      "location": "specific place",
+      "duration_minutes": 90,
+      "tips": "real-time tip",
+      "status": "on-time/adjusted/skipped"
+    }
+  ],
+  "nearby_alternatives": [
+    {"name": "place", "type": "restaurant/attraction/cafe", "distance": "5 min walk", "why": "reason"}
+  ],
+  "time_saved_or_lost": "+30 min",
+  "recommendations": ["tip for rest of day"]
+}`
+    }
+  ];
+
+  const response = await callOpenRouter(messages, { maxTokens: 3000 });
+  return parseJsonResponse(response);
+}
+
 module.exports = {
   callOpenRouter,
   generateItinerary,
@@ -838,5 +955,8 @@ module.exports = {
   generateTripReport,
   findFlights,
   getWeatherAdvice,
-  matchHotels
+  matchHotels,
+  optimizePackingList,
+  tripInspiration,
+  dayOfPlan
 };

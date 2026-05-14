@@ -4,13 +4,32 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all trips
+// Get all trips (with pagination)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM trips WHERE user_id = $1 ORDER BY start_date DESC',
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const countResult = await pool.query(
+      'SELECT COUNT(*) FROM trips WHERE user_id = $1',
       [req.user.id]
     );
+
+    const result = await pool.query(
+      'SELECT * FROM trips WHERE user_id = $1 ORDER BY start_date DESC LIMIT $2 OFFSET $3',
+      [req.user.id, limit, offset]
+    );
+
+    const total = parseInt(countResult.rows[0].count);
+
+    // Support legacy clients that expect array response
+    if (req.query.page || req.query.limit) {
+      return res.json({
+        data: result.rows,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
+    }
     res.json(result.rows);
   } catch (error) {
     console.error('Get trips error:', error);

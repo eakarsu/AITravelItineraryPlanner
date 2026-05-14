@@ -128,6 +128,52 @@ export const ai = {
   // Legacy endpoints
   generatePackingList: (data) => api.post('/ai/generate-packing-list', data),
   getBudgetAdvice: (data) => api.post('/ai/budget-advice', data),
+
+  // 17. Packing optimizer (weather + activities aware)
+  optimizePacking: (data) => api.post('/ai/optimize-packing', data),
+
+  // 18. Trip inspiration
+  tripInspiration: (data) => api.post('/ai/trip-inspiration', data),
+
+  // 19. Day-of plan adjuster
+  dayOfPlan: (data) => api.post('/ai/day-of-plan', data),
+
+  // 20. Similar trips
+  similarTrips: (data) => api.post('/ai/similar-trips', data),
+};
+
+// Collaborators
+export const collaborators = {
+  invite: (tripId, data) => api.post(`/collaborators/trips/${tripId}/invite`, data),
+  getSharedTrips: () => api.get('/collaborators/trips/shared'),
+  getTripCollaborators: (tripId) => api.get(`/collaborators/trips/${tripId}/collaborators`),
+  acceptInvite: (tripId, collabId) => api.put(`/collaborators/trips/${tripId}/collaborators/${collabId}/accept`),
+  removeCollaborator: (tripId, collabId) => api.delete(`/collaborators/trips/${tripId}/collaborators/${collabId}`),
+};
+
+// Document uploads
+export const documentUploads = {
+  upload: (tripId, formData) => api.post(`/documents/${tripId}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  list: (tripId) => api.get(`/documents/${tripId}`),
+  delete: (tripId, docId) => api.delete(`/documents/${tripId}/${docId}`),
+};
+
+// Photo uploads
+export const photoUploads = {
+  upload: (tripId, formData) => api.post(`/photos/${tripId}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  list: (tripId) => api.get(`/photos/${tripId}/uploads`),
+  delete: (tripId, photoId) => api.delete(`/photos/${tripId}/${photoId}`),
+};
+
+// AI Results
+export const aiResults = {
+  getAll: (params) => api.get('/ai-results', { params }),
+  getById: (id) => api.get(`/ai-results/${id}`),
+  delete: (id) => api.delete(`/ai-results/${id}`),
 };
 
 export default api;
