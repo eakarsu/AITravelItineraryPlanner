@@ -82,6 +82,14 @@ app.use('/api/gap-no-webhooks-for-trip-events', require('./routes/gapNoWebhooksF
 app.use('/api/gap-no-notifications-subsystem', require('./routes/gapNoNotificationsSubsystem'));
 app.use('/api/gap-no-audit-log', require('./routes/gapNoAuditLog'));
 
+// === Custom Views (mounted BEFORE 404 handler) ===
+app.use('/api/custom-views', require('./routes/customViews'));
+
+// 404 handler (must be after all routes)
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'Not Found', path: req.originalUrl });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

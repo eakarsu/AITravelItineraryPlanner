@@ -15,6 +15,7 @@ const aiFeatures = [
   { id: 'visa-advisor', name: 'Visa Advisor', icon: '🛂', path: '/visa-advisor' },
   { id: 'insurance-recommender', name: 'Insurance', icon: '🛡️', path: '/insurance-recommender' },
   { id: 'dynamic-adjuster', name: 'Dynamic Adjuster', icon: '🔄', path: '/dynamic-adjuster' },
+  { id: 'custom-views', name: 'Travel Views', icon: '🗺️', path: '/custom-views' },
 ];
 
 const dataFeatures = [

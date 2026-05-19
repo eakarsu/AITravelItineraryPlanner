@@ -15,6 +15,7 @@ import DayOfMode from './pages/DayOfMode';
 import VisaAdvisor from './pages/VisaAdvisor';
 import InsuranceRecommender from './pages/InsuranceRecommender';
 import DynamicAdjuster from './pages/DynamicAdjuster';
+import CustomViewsPage from './pages/CustomViewsPage';
 import Sidebar from './components/Sidebar';
 // === Batch 08 Gaps & Frontend Mounts ===
 import CfDynamicItineraryAdjustmentForRealTimeDelay from './pages/CfDynamicItineraryAdjustmentForRealTimeDelay'
@@ -35,6 +36,7 @@ import GapNoWebhooksForTripEvents from './pages/GapNoWebhooksForTripEvents'
 import GapNoNotificationsSubsystem from './pages/GapNoNotificationsSubsystem'
 import GapNoAuditLog from './pages/GapNoAuditLog'
 
+const ProtectedRoute = ({ children }) => children;
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -159,6 +161,10 @@ const AppContent = () => {
             <Route
               path="/dynamic-adjuster"
               element={<PrivateRoute><DynamicAdjuster /></PrivateRoute>}
+            />
+            <Route
+              path="/custom-views"
+              element={<PrivateRoute><CustomViewsPage /></PrivateRoute>}
             />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
