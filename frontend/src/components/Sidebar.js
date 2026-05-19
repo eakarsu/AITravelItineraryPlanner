@@ -10,6 +10,12 @@ const aiFeatures = [
   { id: 'ai-budget', name: 'Budget Tracker', icon: '💵' },
   { id: 'ai-activities', name: 'Activity Finder', icon: '🎯' },
   { id: 'ai-history', name: 'AI History', icon: '📜', path: '/ai-history' },
+  { id: 'trip-inspiration', name: 'Trip Inspiration', icon: '🌟', path: '/trip-inspiration' },
+  { id: 'day-of-mode', name: 'Day-Of Mode', icon: '📍', path: '/day-of-mode' },
+  { id: 'visa-advisor', name: 'Visa Advisor', icon: '🛂', path: '/visa-advisor' },
+  { id: 'insurance-recommender', name: 'Insurance', icon: '🛡️', path: '/insurance-recommender' },
+  { id: 'dynamic-adjuster', name: 'Dynamic Adjuster', icon: '🔄', path: '/dynamic-adjuster' },
+  { id: 'custom-views', name: 'Travel Views', icon: '🗺️', path: '/custom-views' },
 ];
 
 const dataFeatures = [
@@ -27,6 +33,8 @@ const dataFeatures = [
   { id: 'reviews', name: 'Reviews', icon: '⭐' },
   { id: 'photos', name: 'Photos', icon: '📸' },
   { id: 'notes', name: 'Notes', icon: '📝' },
+  { id: 'document-vault', name: 'Document Vault', icon: '🔒', path: '/document-vault' },
+  { id: 'trip-collaboration', name: 'Collaboration', icon: '👥', path: '/trip-collaboration' },
 ];
 
 const Sidebar = ({ isOpen, onToggle }) => {
