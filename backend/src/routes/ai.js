@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const authMiddleware = require('../middleware/auth');
 const openrouter = require('../services/openrouter');
 const pool = require('../config/database');
@@ -10,7 +11,7 @@ const router = express.Router();
 const aiRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  keyGenerator: (req) => req.user ? 'user:' + (req.user.id || req.user.userId) : req.ip,
+  keyGenerator: (req) => req.user ? 'user:' + (req.user.id || req.user.userId) : ipKeyGenerator(req.ip),
   message: { error: 'AI rate limit exceeded. Max 20 AI requests per hour.' },
   standardHeaders: true,
   legacyHeaders: false

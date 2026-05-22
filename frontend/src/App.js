@@ -17,6 +17,11 @@ import InsuranceRecommender from './pages/InsuranceRecommender';
 import DynamicAdjuster from './pages/DynamicAdjuster';
 import CustomViewsPage from './pages/CustomViewsPage';
 import Sidebar from './components/Sidebar';
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
+import TimelineView from './pages/TimelineView';
+
 // === Batch 08 Gaps & Frontend Mounts ===
 import CfDynamicItineraryAdjustmentForRealTimeDelay from './pages/CfDynamicItineraryAdjustmentForRealTimeDelay'
 import CfLocalCurrencySpendingTrackerWithMultiCurrency from './pages/CfLocalCurrencySpendingTrackerWithMultiCurrency'
@@ -60,6 +65,10 @@ const AppContent = () => {
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         {/* // === Batch 08 Gaps & Frontend Mounts === */}
