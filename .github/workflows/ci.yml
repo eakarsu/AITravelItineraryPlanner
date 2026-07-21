@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - name: Syntax and migration safety
+        run: |
+          node --check backend/src/index.js
+          node --check backend/src/routes/governedTravel.js
+          node --check backend/src/domain/travelWorkflow.js
+          bash -n start.sh scripts/*.sh
+          ! grep -Eiq '(^|[[:space:]])(DROP[[:space:]]+TABLE|TRUNCATE|DELETE[[:space:]]+FROM)' backend/migrations/001_governed_travel.sql
