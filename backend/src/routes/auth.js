@@ -13,4 +13,9 @@ router.post('/login',async(req,res)=>{try{
 }catch(_error){res.status(500).json({error:'Login failed'});}});
 router.get('/me',authenticate,(req,res)=>res.json({user:req.user}));
 router.get('/verify',authenticate,(req,res)=>res.json({valid:true,user:req.user}));
+router.get('/demo-credentials',(req,res)=>{
+  if(process.env.NODE_ENV==='production'||process.env.ENABLE_DEMO_CREDENTIAL_AUTOFILL==='false')return res.status(404).json({error:'Demo credentials are disabled'});
+  if(!process.env.DEMO_EMAIL||!process.env.DEMO_PASSWORD)return res.status(503).json({error:'Demo account is not configured'});
+  res.json({email:process.env.DEMO_EMAIL,password:process.env.DEMO_PASSWORD});
+});
 module.exports=router;
