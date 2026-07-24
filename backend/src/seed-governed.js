@@ -9,8 +9,9 @@ async function seedGovernedIdentity() {
     await client.query('BEGIN');
     const schema = await client.query("SELECT to_regclass('public.travel_users') AS users_table");
     if (!schema.rows[0].users_table) throw new Error('Governed schema is missing; run the additive migration first');
-    const email = process.env.SEED_ADMIN_EMAIL || process.env.DEMO_EMAIL || 'demo@travelplanner.com';
-    const password = process.env.SEED_ADMIN_PASSWORD || process.env.DEMO_PASSWORD || 'Demo123!';
+    const email = process.env.SEED_ADMIN_EMAIL || process.env.DEMO_EMAIL;
+    const password = process.env.SEED_ADMIN_PASSWORD || process.env.DEMO_PASSWORD;
+    if (!email || !password || password.length < 12) throw new Error('Seed email and a 12+ character password are required');
     const name = process.env.BOOTSTRAP_ADMIN_NAME || 'Demo Traveler';
     const tenantName = process.env.BOOTSTRAP_TENANT_NAME || 'Development Tenant';
     const passwordHash = await bcrypt.hash(password, 10);
