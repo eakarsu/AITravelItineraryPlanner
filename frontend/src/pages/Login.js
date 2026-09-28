@@ -103,7 +103,7 @@ const Login = () => {
           className="btn demo-btn"
           disabled={loading}
         >
-          🎯 Use Demo Credentials
+          🎯 Auto Fill Demo Credentials
         </button>
 
         <div className="auth-link">
