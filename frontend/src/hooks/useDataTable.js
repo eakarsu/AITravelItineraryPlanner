@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 
-const useDataTable = (data, columns, itemsPerPage = 10) => {
+const useDataTable = (data, columns, itemsPerPage = 20) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
@@ -9,9 +9,10 @@ const useDataTable = (data, columns, itemsPerPage = 10) => {
 
   // Search: filter across all visible columns
   const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return data;
+    const rows = Array.isArray(data) ? data : [];
+    if (!searchTerm.trim()) return rows;
     const term = searchTerm.toLowerCase();
-    return data.filter((item) =>
+    return rows.filter((item) =>
       columns.some((col) => {
         const val = item[col];
         if (val === null || val === undefined) return false;

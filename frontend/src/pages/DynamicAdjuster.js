@@ -1,3 +1,5 @@
+import TravelPresets from '../components/TravelPresets';
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -70,6 +72,7 @@ export default function DynamicAdjuster() {
         Re-plan an existing itinerary in response to disruptions (weather, delays, illness, budget changes).
       </p>
 
+      <TravelPresets presets={[{ label: 'Paris rail delay', values: { current_itinerary: 'Day 1: Louvre at 10:00, lunch at 13:00, Seine cruise at 17:00', change_type: 'schedule_shift', change_details: 'Train arrival delayed two hours; reach Paris at noon.', new_constraints: 'Keep the cruise booking and allow a lunch break.' } }, { label: 'Tokyo rain plan', values: { current_itinerary: 'Day 2: Meiji Shrine, Yoyogi Park, outdoor market', change_type: 'weather', change_details: 'Heavy rain forecast from 10:00 to 18:00.', new_constraints: 'Prefer indoor activities accessible by train.' } }, { label: 'Rome mobility change', values: { current_itinerary: 'Day 3: Colosseum, Forum, Trastevere evening walk', change_type: 'illness', change_details: 'Traveler needs rest and shorter walking distances.', new_constraints: 'Limit walking to 15 minutes at a time and retain hotel rest time.' } }]} disabled={loading} onChoose={(values) => setForm((current) => ({ ...current, ...values }))} />
       <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           <div>
@@ -117,9 +120,7 @@ export default function DynamicAdjuster() {
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>Revised Plan</h2>
           {result.summary && <p style={{ marginBottom: 12 }}>{result.summary}</p>}
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, background: '#f9fafb', padding: 14, borderRadius: 8, overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <FormattedAIReport response={result} />
         </div>
       )}
     </div>

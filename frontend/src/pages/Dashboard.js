@@ -44,7 +44,7 @@ const Dashboard = () => {
       const countPromises = quickAccessItems.map(async (feature) => {
         try {
           const response = await api[feature.apiKey].getAll();
-          return { [feature.id]: response.data.length };
+          return { [feature.id]: response.data?.pagination?.total ?? api.recordRows(response.data).length };
         } catch {
           return { [feature.id]: 0 };
         }

@@ -42,7 +42,7 @@ const Login = () => {
       setEmail(demoEmail);
       setPassword(demoPassword);
     } catch (err) {
-      setError('Failed to get demo credentials');
+      setError(err.response?.data?.error || 'Demo credentials are unavailable. Configure the existing demo account on the server.');
     } finally {
       setLoading(false);
     }
@@ -83,15 +83,6 @@ const Login = () => {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={() => { setEmail(process.env.REACT_APP_DEMO_EMAIL || ''); setPassword(process.env.REACT_APP_DEMO_PASSWORD || ''); }}
-            disabled={!process.env.REACT_APP_DEMO_EMAIL || !process.env.REACT_APP_DEMO_PASSWORD}
-            aria-label="Auto Fill Demo Credentials"
-            style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
-          >
-            Auto Fill Demo Credentials
-          </button>
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -103,7 +94,7 @@ const Login = () => {
           className="btn demo-btn"
           disabled={loading}
         >
-          🎯 Auto Fill Demo Credentials
+          Fill demo credentials
         </button>
 
         <div className="auth-link">

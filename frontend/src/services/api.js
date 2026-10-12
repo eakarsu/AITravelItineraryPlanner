@@ -2,6 +2,11 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
 
+// List endpoints may return an array or a paginated { data, pagination } body.
+export const recordRows = (payload) => Array.isArray(payload)
+  ? payload
+  : Array.isArray(payload?.data) ? payload.data : [];
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {

@@ -1,3 +1,4 @@
+import AIReportLibrary from "./AIReportLibrary";
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -156,7 +157,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
             </svg>
           </button>
         </div>
-      </aside>
+      <AIReportLibrary /></aside>
     </>
   );
 };

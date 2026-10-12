@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { trips, collaborators } from '../services/api';
+import { trips, collaborators, recordRows } from '../services/api';
 
 const TripCollaboration = () => {
   const [tripList, setTripList] = useState([]);
@@ -22,8 +22,8 @@ const TripCollaboration = () => {
         trips.getAll(),
         collaborators.getSharedTrips()
       ]);
-      setTripList(Array.isArray(tripsRes.data) ? tripsRes.data : tripsRes.data.data || []);
-      setSharedTrips(sharedRes.data.data || []);
+      setTripList(recordRows(tripsRes.data));
+      setSharedTrips(recordRows(sharedRes.data));
     } catch {}
   };
 
@@ -31,7 +31,7 @@ const TripCollaboration = () => {
     if (!tripId) return;
     try {
       const res = await collaborators.getTripCollaborators(tripId);
-      setTripCollabs(res.data.data || []);
+      setTripCollabs(recordRows(res.data));
     } catch {
       setTripCollabs([]);
     }

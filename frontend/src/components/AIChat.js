@@ -1,3 +1,5 @@
+import TravelPresets from './TravelPresets';
+import FormattedAIReport from './FormattedAIReport';
 import React, { useState, useRef, useEffect } from 'react';
 import * as api from '../services/api';
 
@@ -79,7 +81,7 @@ What would you like to know?`
               {msg.role === 'assistant' ? '🤖' : '👤'}
             </div>
             <div className="message-content">
-              <pre>{msg.content}</pre>
+              {msg.role === 'assistant' && !msg.error && index > 0 ? <FormattedAIReport response={msg.content} title="Assistant response" /> : <pre>{msg.content}</pre>}
             </div>
           </div>
         ))}
@@ -97,6 +99,7 @@ What would you like to know?`
         )}
         <div ref={messagesEndRef} />
       </div>
+      <TravelPresets disabled={loading} presets={[{ label: 'Three day city plan', values: { input: 'Plan three days in Kyoto with public transit, a moderate budget, and one cultural highlight per day.' } }, { label: 'Food and access', values: { input: 'Suggest accessible restaurants in Lisbon with vegetarian options and note what needs confirming.' } }, { label: 'Travel disruption', values: { input: 'My train is delayed two hours in Paris. Suggest a revised afternoon with indoor activities and a dinner reservation at 19:00.' } }]} onChoose={({ input: example }) => setInput(example)} />
       <div className="ai-chat-input">
         <textarea
           value={input}

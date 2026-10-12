@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { trips, documentUploads } from '../services/api';
+import { trips, documentUploads, recordRows } from '../services/api';
 
 const DocumentVault = () => {
   const [tripList, setTripList] = useState([]);
@@ -13,7 +13,7 @@ const DocumentVault = () => {
 
   useEffect(() => {
     trips.getAll().then(res => {
-      const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+      const data = recordRows(res.data);
       setTripList(data);
     }).catch(() => {});
   }, []);
@@ -29,7 +29,7 @@ const DocumentVault = () => {
     setLoading(true);
     try {
       const res = await documentUploads.list(selectedTrip);
-      setDocuments(res.data.data || res.data || []);
+      setDocuments(recordRows(res.data));
     } catch {
       setDocuments([]);
     } finally {

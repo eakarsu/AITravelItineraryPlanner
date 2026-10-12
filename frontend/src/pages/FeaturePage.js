@@ -1,3 +1,5 @@
+import TravelPresets from '../components/TravelPresets';
+import FormattedAIReport from '../components/FormattedAIReport';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as api from '../services/api';
@@ -478,7 +480,7 @@ const FeaturePage = () => {
     }
     try {
       const response = await api[config.apiKey].getAll();
-      setData(response.data);
+      setData(api.recordRows(response.data));
     } catch (err) {
       setError('Failed to fetch data');
     } finally {
@@ -2737,150 +2739,10 @@ const FeaturePage = () => {
     );
   };
 
-  // Main render AI Result function
-  const renderAIResult = () => {
-    if (!aiResult) return null;
-
-    if (aiResult.error) {
-      return <div className="error-message">{aiResult.error}</div>;
-    }
-
-    const data = parseAIResponse(aiResult);
-    console.log('Rendering AI result, parsed data:', data);
-    console.log('Data keys:', data ? Object.keys(data) : 'null');
-
-    if (!data) return null;
-
-    // If we got raw text back, try to format it nicely
-    if (data.rawText || data.isRawText) {
-      const textContent = data.rawText || data.message || '';
-
-      // Try to format JSON-like content nicely
-      if (textContent.includes('"') && (textContent.includes('{') || textContent.includes('['))) {
-        // It looks like JSON, let's try to display it in a structured way
-        return (
-          <div className="ai-result-formatted">
-            <div className="ai-result-header">
-              <h3>🤖 AI Response</h3>
-              <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Response was too long - showing raw data</p>
-            </div>
-            <pre style={{
-              background: '#1e293b',
-              color: '#e2e8f0',
-              padding: '1rem',
-              borderRadius: '8px',
-              overflow: 'auto',
-              fontSize: '0.85rem',
-              lineHeight: '1.5',
-              maxHeight: '500px'
-            }}>
-              {textContent}
-            </pre>
-          </div>
-        );
-      }
-
-      return (
-        <div className="ai-result-formatted">
-          <div className="ai-result-header">
-            <h3>🤖 AI Response</h3>
-          </div>
-          <div className="ai-generic-text" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-            {textContent}
-          </div>
-        </div>
-      );
-    }
-
-    // Detect the type of result and render appropriately
-    // Packing list detection - has categories object with items
-    if (data.categories && typeof data.categories === 'object') {
-      console.log('Detected: Packing List');
-      return renderPackingList(data);
-    }
-
-    // Itinerary ANALYSIS detection - has conflicts, hasConflicts, or generatedItinerary
-    if (data.hasConflicts !== undefined || data.generatedItinerary || data.optimizedOrder ||
-        (data.conflicts && Array.isArray(data.conflicts))) {
-      console.log('Detected: Itinerary Analysis');
-      return renderItineraryAnalysis(data);
-    }
-
-    // Itinerary detection - has days array or itinerary with detailed trip info
-    if (data.days || data.itinerary || (data.fromLocation && data.totalDays)) {
-      console.log('Detected: Itinerary');
-      return renderItinerary(data);
-    }
-
-    // Suggestions detection - activities, restaurants, or accommodations arrays
-    if (data.suggestions ||
-        (Array.isArray(data.activities) && data.activities.length > 0 && data.activities[0].name) ||
-        (Array.isArray(data.restaurants) && data.restaurants.length > 0) ||
-        (Array.isArray(data.accommodations) && data.accommodations.length > 0) ||
-        Array.isArray(data) && data.length > 0 && data[0].name) {
-      console.log('Detected: Suggestions');
-      // Handle when result is a direct array
-      if (Array.isArray(data)) {
-        return renderSuggestions({ suggestions: data, type: 'Suggestions' });
-      }
-      return renderSuggestions(data);
-    }
-
-    // Budget optimization detection - has breakdown or analysis
-    if (data.breakdown || data.savingTips || data.moneySavingTips || data.analysis ||
-        (data.budget && data.recommendations)) {
-      console.log('Detected: Budget Optimization');
-      return renderBudgetOptimization(data);
-    }
-
-    // Translation detection
-    if (data.translation || data.translated || (data.original && data.pronunciation)) {
-      console.log('Detected: Translation');
-      return renderTranslation(data);
-    }
-
-    // Destination info detection - ONLY if it doesn't have itinerary properties
-    if ((data.language || data.currency || data.attractions || data.bestTimeToVisit ||
-        data.popular_attractions || data.local_cuisine || data.climate) &&
-        !data.days && !data.itinerary && !data.fromLocation && !data.totalDays) {
-      console.log('Detected: Destination Info');
-      return renderDestinationInfo(data);
-    }
-
-    // Review summary detection
-    if (data.overallSentiment || data.commonPros || data.categoryBreakdown) {
-      console.log('Detected: Review Summary');
-      return renderGenericResult(data);
-    }
-
-    // Trip report detection
-    if (data.highlights && data.statistics && data.bestMoments) {
-      console.log('Detected: Trip Report');
-      return renderGenericResult(data);
-    }
-
-    // Flight results detection
-    if (data.recommendations && data.totalEstimate && (data.searchCriteria?.origin || data.cheapestOption)) {
-      console.log('Detected: Flight Results');
-      return renderFlightResults(data);
-    }
-
-    // Weather results detection
-    if (data.weatherOverview || data.dailyForecast || data.seasonInfo || data.packingRecommendations) {
-      console.log('Detected: Weather Results');
-      return renderWeatherResults(data);
-    }
-
-    // Hotel match results detection
-    if (data.perfectMatches || data.neighborhoodGuide || (data.budgetOptions && data.splurgeOptions)) {
-      console.log('Detected: Hotel Match Results');
-      return renderHotelMatchResults(data);
-    }
-
-    // Use smart generic renderer for everything else
-    console.log('Using generic renderer');
-    return renderGenericResult(data);
-  };
+  // Use the same structured renderer for returned results and saved history.
+  const renderAIResult = () => aiResult && (aiResult.error
+    ? <div className="error-message">{aiResult.error}</div>
+    : <FormattedAIReport response={parseAIResponse(aiResult)} title="AI result" />);
 
   // Specialized AI Feature Pages
   if (config.isAI && config.aiType) {
@@ -2896,27 +2758,12 @@ const FeaturePage = () => {
 
           <div className="ai-assistant-container">
             <div className="ai-content">
+              <TravelPresets presets={[{ label: 'Tokyo city week', values: { fromLocation: 'San Francisco, USA', destination: 'Tokyo, Japan', days: 7, budget: 2800, interests: 'temples, food markets, rail travel', season: 'spring', travelStyle: 'moderate', tripType: 'leisure', phrase: 'Where is the nearest station?', targetLanguage: 'Japanese', departureDate: '2027-04-12', returnDate: '2027-04-19', passengers: 2, travelDates: 'April 12–19, 2027', travelers: 2, preferences: 'Walkable neighborhoods and public transit' } }, { label: 'Lisbon food break', values: { fromLocation: 'Boston, USA', destination: 'Lisbon, Portugal', days: 5, budget: 1700, interests: 'local food, history, waterfront', season: 'fall', travelStyle: 'budget', tripType: 'leisure', phrase: 'Do you have a vegetarian option?', targetLanguage: 'Portuguese', departureDate: '2027-10-05', returnDate: '2027-10-10', passengers: 1, travelDates: 'October 5–10, 2027', travelers: 1, preferences: 'Small hotels near transit' } }, { label: 'Vancouver family trip', values: { fromLocation: 'Chicago, USA', destination: 'Vancouver, Canada', days: 6, budget: 3200, interests: 'parks, museums, family dining', season: 'summer', travelStyle: 'moderate', tripType: 'family', phrase: 'Is this activity suitable for children?', targetLanguage: 'French', departureDate: '2027-07-08', returnDate: '2027-07-14', passengers: 4, travelDates: 'July 8–14, 2027', travelers: 4, preferences: 'Family rooms and low walking distances' } }]} disabled={aiLoading} onChoose={(values) => setAiInput((current) => ({ ...current, ...values }))} />
               {/* AI Flight Finder */}
               {config.aiType === 'flights' && (
                 <div className="ai-form-section">
                   <h3>✈️ Find the Best Flights with AI</h3>
                   <p>Let AI find and compare flight options for your trip.</p>
-
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      fromLocation: 'New York, USA',
-                      destination: 'London, UK',
-                      departureDate: '2026-04-15',
-                      returnDate: '2026-04-22',
-                      budget: 800,
-                      passengers: 2
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
 
                   <div className="ai-form">
                     <div className="form-row">
@@ -3008,21 +2855,6 @@ const FeaturePage = () => {
                   <h3>🏨 Match Your Perfect Hotel with AI</h3>
                   <p>Find accommodations that match your preferences and budget.</p>
 
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      destination: 'Paris, France',
-                      budget: 200,
-                      travelDates: 'June 15-22, 2026',
-                      travelers: '2 adults',
-                      preferences: 'pool, central location, free breakfast, gym'
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
-
                   <div className="ai-form">
                     <div className="form-row">
                       <div className="form-group">
@@ -3103,19 +2935,6 @@ const FeaturePage = () => {
                   <h3>🌤️ Get Weather-Based Travel Advice</h3>
                   <p>Plan your trip around the weather with AI recommendations.</p>
 
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      destination: 'Tokyo, Japan',
-                      travelDates: 'April 2026',
-                      interests: 'hiking, sightseeing, photography, temple visits'
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
-
                   <div className="ai-form">
                     <div className="form-row">
                       <div className="form-group">
@@ -3174,21 +2993,6 @@ const FeaturePage = () => {
                 <div className="ai-form-section">
                   <h3>💵 Optimize Your Travel Budget with AI</h3>
                   <p>Get personalized budget recommendations and money-saving tips.</p>
-
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      fromLocation: 'Chicago, USA',
-                      destination: 'Barcelona, Spain',
-                      budget: 3000,
-                      days: 10,
-                      travelStyle: 'moderate'
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
 
                   <div className="ai-form">
                     <div className="form-row">
@@ -3271,19 +3075,6 @@ const FeaturePage = () => {
                 <div className="ai-form-section">
                   <h3>🎯 Get Personalized Activity Recommendations</h3>
                   <p>Discover activities tailored to your interests and budget.</p>
-
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      destination: 'Rome, Italy',
-                      travelStyle: 'moderate',
-                      interests: 'history, food, art, architecture, wine tasting'
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
 
                   <div className="ai-form">
                     <div className="form-row">
@@ -3375,6 +3166,7 @@ const FeaturePage = () => {
             </div>
 
             <div className="ai-content">
+              <TravelPresets presets={[{ label: 'Tokyo city week', values: { fromLocation: 'San Francisco, USA', destination: 'Tokyo, Japan', days: 7, budget: 2800, interests: 'temples, food markets, rail travel', season: 'spring', travelStyle: 'moderate', tripType: 'leisure', phrase: 'Where is the nearest station?', targetLanguage: 'Japanese', departureDate: '2027-04-12', returnDate: '2027-04-19', passengers: 2, travelDates: 'April 12–19, 2027', travelers: 2, preferences: 'Walkable neighborhoods and public transit' } }, { label: 'Lisbon food break', values: { fromLocation: 'Boston, USA', destination: 'Lisbon, Portugal', days: 5, budget: 1700, interests: 'local food, history, waterfront', season: 'fall', travelStyle: 'budget', tripType: 'leisure', phrase: 'Do you have a vegetarian option?', targetLanguage: 'Portuguese', departureDate: '2027-10-05', returnDate: '2027-10-10', passengers: 1, travelDates: 'October 5–10, 2027', travelers: 1, preferences: 'Small hotels near transit' } }, { label: 'Vancouver family trip', values: { fromLocation: 'Chicago, USA', destination: 'Vancouver, Canada', days: 6, budget: 3200, interests: 'parks, museums, family dining', season: 'summer', travelStyle: 'moderate', tripType: 'family', phrase: 'Is this activity suitable for children?', targetLanguage: 'French', departureDate: '2027-07-08', returnDate: '2027-07-14', passengers: 4, travelDates: 'July 8–14, 2027', travelers: 4, preferences: 'Family rooms and low walking distances' } }]} disabled={aiLoading} onChoose={(values) => setAiInput((current) => ({ ...current, ...values }))} />
               {aiTab === 'chat' && (
                 <div className="ai-chat-section">
                   <h3>🤖 Chat with AI Travel Assistant</h3>
@@ -3387,22 +3179,6 @@ const FeaturePage = () => {
                 <div className="ai-form-section">
                   <h3>🗓️ Generate Complete Trip Itinerary</h3>
                   <p>Let AI create a detailed day-by-day travel plan for you.</p>
-
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      fromLocation: 'San Francisco, USA',
-                      destination: 'Tokyo, Japan',
-                      days: 5,
-                      budget: 2500,
-                      travelStyle: 'moderate',
-                      interests: 'temples, sushi, anime, nature, shopping'
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
 
                   <div className="ai-form">
                     <div className="form-row">
@@ -3488,18 +3264,6 @@ const FeaturePage = () => {
                   <h3>💡 Get AI Suggestions</h3>
                   <p>Get personalized recommendations for your trip.</p>
 
-                  <button
-                    className="btn btn-secondary btn-small"
-                    style={{ marginBottom: '1rem' }}
-                    onClick={() => setAiInput({
-                      ...aiInput,
-                      fromLocation: 'Los Angeles, USA',
-                      destination: 'Bali, Indonesia'
-                    })}
-                  >
-                    📋 Load Sample Data
-                  </button>
-
                   <div className="form-row">
                     <div className="form-group">
                       <label>From (Your Location)</label>
@@ -3571,19 +3335,6 @@ const FeaturePage = () => {
                     {/* Packing List Generator */}
                     <div className="ai-tool-card">
                       <h4>🧳 Smart Packing List</h4>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        style={{ marginBottom: '0.5rem', fontSize: '0.75rem', padding: '4px 8px' }}
-                        onClick={() => setAiInput({
-                          ...aiInput,
-                          fromLocation: 'Miami, USA',
-                          destination: 'Reykjavik, Iceland',
-                          season: 'winter',
-                          tripType: 'adventure'
-                        })}
-                      >
-                        📋 Sample
-                      </button>
                       <div className="form-row">
                         <input
                           type="text"
@@ -3630,19 +3381,6 @@ const FeaturePage = () => {
                     {/* Budget Optimizer */}
                     <div className="ai-tool-card">
                       <h4>💰 Budget Optimizer</h4>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        style={{ marginBottom: '0.5rem', fontSize: '0.75rem', padding: '4px 8px' }}
-                        onClick={() => setAiInput({
-                          ...aiInput,
-                          fromLocation: 'Boston, USA',
-                          destination: 'Bangkok, Thailand',
-                          budget: 2000,
-                          days: 14
-                        })}
-                      >
-                        📋 Sample
-                      </button>
                       <div className="form-row">
                         <input
                           type="text"
@@ -3683,17 +3421,6 @@ const FeaturePage = () => {
                     {/* Translator */}
                     <div className="ai-tool-card">
                       <h4>🌐 Travel Translator</h4>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        style={{ marginBottom: '0.5rem', fontSize: '0.75rem', padding: '4px 8px' }}
-                        onClick={() => setAiInput({
-                          ...aiInput,
-                          phrase: 'Where is the nearest train station?',
-                          targetLanguage: 'Japanese'
-                        })}
-                      >
-                        📋 Sample
-                      </button>
                       <div className="form-group">
                         <input
                           type="text"
@@ -3729,17 +3456,6 @@ const FeaturePage = () => {
                     {/* Itinerary Analyzer */}
                     <div className="ai-tool-card">
                       <h4>🔍 Itinerary Analyzer</h4>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        style={{ marginBottom: '0.5rem', fontSize: '0.75rem', padding: '4px 8px' }}
-                        onClick={() => setAiInput({
-                          ...aiInput,
-                          destination: 'Istanbul, Turkey',
-                          days: 5
-                        })}
-                      >
-                        📋 Sample
-                      </button>
                       <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
                         Generate and analyze an itinerary for any destination.
                       </p>
@@ -3786,17 +3502,6 @@ const FeaturePage = () => {
                     {/* Destination Auto-Fill */}
                     <div className="ai-tool-card">
                       <h4>📍 Auto-Fill Destination</h4>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        style={{ marginBottom: '0.5rem', fontSize: '0.75rem', padding: '4px 8px' }}
-                        onClick={() => setAiInput({
-                          ...aiInput,
-                          fromLocation: 'New York, USA',
-                          destination: 'Marrakech, Morocco'
-                        })}
-                      >
-                        📋 Sample
-                      </button>
                       <div className="form-row">
                         <input
                           type="text"

@@ -1,5 +1,7 @@
+import FormattedAIReport from '../components/FormattedAIReport';
+import TravelPresets from '../components/TravelPresets';
 import React, { useState, useEffect } from 'react';
-import { ai, trips } from '../services/api';
+import { ai, trips, recordRows } from '../services/api';
 
 const DayOfMode = () => {
   const [tripList, setTripList] = useState([]);
@@ -16,7 +18,7 @@ const DayOfMode = () => {
 
   useEffect(() => {
     trips.getAll().then(res => {
-      setTripList(Array.isArray(res.data) ? res.data : res.data.data || []);
+      setTripList(recordRows(res.data));
     }).catch(() => {});
   }, []);
 
@@ -65,6 +67,9 @@ const DayOfMode = () => {
         </p>
       </div>
 
+      <TravelPresets disabled={loading} note="Samples fill location, time, and delay. An existing trip selection is preserved; select a real trip if one is required."
+        presets={[{ label: 'Paris museum closure', values: { location: 'Louvre Museum, Paris', time: '11:00', delay: 'Museum closed unexpectedly; find a nearby indoor alternative.' } }, { label: 'Tokyo transit delay', values: { location: 'Tokyo Station', time: '15:30', delay: 'Train delayed 45 minutes; dinner reservation is at 19:00.' } }, { label: 'Rome heat adjustment', values: { location: 'Colosseum, Rome', time: '13:00', delay: 'Heat advisory; reduce outdoor walking this afternoon.' } }]}
+        onChoose={({ location, time, delay }) => { setCurrentLocation(location); setCurrentTime(time); setDelays(delay); }} />
       <form onSubmit={handleSubmit} style={{
         background: '#f8fafc', border: '1px solid #e2e8f0',
         borderRadius: '12px', padding: '1.5rem', marginBottom: '2rem'
@@ -159,117 +164,7 @@ const DayOfMode = () => {
         </button>
       </form>
 
-      {result && (
-        <div>
-          {/* Adjusted Schedule */}
-          {result.adjusted_schedule && result.adjusted_schedule.length > 0 && (
-            <div style={{ marginBottom: '2rem' }}>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>
-                Adjusted Schedule
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {result.adjusted_schedule.map((item, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#fff', border: '1px solid #e5e7eb',
-                      borderRadius: '10px', padding: '1rem',
-                      borderLeft: `4px solid ${statusColor(item.status)}`,
-                      opacity: item.status === 'skipped' ? 0.65 : 1
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                      <span style={{
-                        fontWeight: 700, color: '#1e293b',
-                        background: '#f1f5f9', padding: '0.2rem 0.6rem',
-                        borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.9rem'
-                      }}>
-                        {item.time}
-                      </span>
-                      <span style={{ fontWeight: 600, color: '#1e293b', flex: 1 }}>{item.activity}</span>
-                      <span style={{
-                        fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem',
-                        borderRadius: '999px', background: `${statusColor(item.status)}22`,
-                        color: statusColor(item.status), textTransform: 'capitalize'
-                      }}>
-                        {item.status || 'scheduled'}
-                      </span>
-                    </div>
-                    {item.location && (
-                      <div style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                        📍 {item.location}
-                        {item.duration_minutes && ` · ${item.duration_minutes} min`}
-                      </div>
-                    )}
-                    {item.tips && (
-                      <div style={{ color: '#374151', fontSize: '0.875rem', marginTop: '0.4rem' }}>
-                        💡 {item.tips}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Summary stats */}
-          {result.time_saved_or_lost && (
-            <div style={{
-              display: 'inline-block', padding: '0.5rem 1rem',
-              background: result.time_saved_or_lost.startsWith('+') ? '#fef3c7' : '#dcfce7',
-              borderRadius: '8px', marginBottom: '1.5rem', fontWeight: 600,
-              color: result.time_saved_or_lost.startsWith('+') ? '#92400e' : '#166534'
-            }}>
-              Time {result.time_saved_or_lost.startsWith('+') ? 'lost' : 'saved'}: {result.time_saved_or_lost}
-            </div>
-          )}
-
-          {/* Nearby alternatives */}
-          {result.nearby_alternatives && result.nearby_alternatives.length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 700, marginBottom: '0.75rem', color: '#1e293b' }}>Nearby Alternatives</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
-                {result.nearby_alternatives.map((alt, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#f0fdf4', border: '1px solid #bbf7d0',
-                      borderRadius: '8px', padding: '0.875rem'
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, color: '#15803d', marginBottom: '0.25rem' }}>
-                      {alt.name}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: '#166534' }}>
-                      {alt.type} · {alt.distance}
-                    </div>
-                    {alt.why && (
-                      <div style={{ fontSize: '0.8rem', color: '#374151', marginTop: '0.25rem' }}>
-                        {alt.why}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recommendations */}
-          {result.recommendations && result.recommendations.length > 0 && (
-            <div style={{
-              background: '#f0f9ff', border: '1px solid #bae6fd',
-              borderRadius: '10px', padding: '1rem'
-            }}>
-              <h3 style={{ fontWeight: 700, color: '#0369a1', marginBottom: '0.5rem' }}>
-                AI Recommendations
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#0c4a6e', fontSize: '0.9rem' }}>
-                {result.recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+      {result && <FormattedAIReport response={result} title='Travel plan' />}
     </div>
   );
 };

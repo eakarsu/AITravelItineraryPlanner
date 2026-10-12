@@ -1,5 +1,6 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import React, { useState, useEffect, useCallback } from 'react';
-import { aiHistory } from '../services/api';
+import { aiHistory, recordRows } from '../services/api';
 
 const featureLabels = {
   itinerary: { label: 'Itinerary', icon: '🗺️' },
@@ -890,7 +891,7 @@ const AIHistory = () => {
     try {
       setLoading(true);
       const res = await aiHistory.getAll();
-      setEntries(res.data);
+      setEntries(recordRows(res.data));
     } catch (err) {
       console.error('Failed to load AI history:', err);
     } finally {
@@ -1051,7 +1052,7 @@ const AIHistory = () => {
                 )}
 
                 <div className="ai-history-section">
-                  {detectAndRender(selectedEntry.response_data, selectedEntry.feature_type)}
+                  <FormattedAIReport response={selectedEntry.response_data} title={selectedEntry.title || 'Saved AI result'} />
                 </div>
               </>
             )}

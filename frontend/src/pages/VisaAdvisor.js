@@ -1,3 +1,5 @@
+import TravelPresets from '../components/TravelPresets';
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -53,6 +55,7 @@ export default function VisaAdvisor() {
       <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>🛂 Visa & Document Advisor</h1>
       <p style={{ color: '#64748b', marginBottom: 24, fontSize: 14 }}>Get visa and entry-document requirements based on your citizenship and destination.</p>
 
+      <TravelPresets presets={[{ label: 'US to Japan', values: { citizenship: 'United States', destination: 'Japan', purpose: 'tourism', duration_days: 14, transit_countries: 'Canada' } }, { label: 'India to France', values: { citizenship: 'India', destination: 'France', purpose: 'business', duration_days: 8, transit_countries: 'United Arab Emirates' } }, { label: 'UK to Australia', values: { citizenship: 'United Kingdom', destination: 'Australia', purpose: 'study', duration_days: 90, transit_countries: 'Singapore' } }]} disabled={loading} onChoose={(values) => setForm((current) => ({ ...current, ...values }))} />
       <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           <div>
@@ -95,9 +98,7 @@ export default function VisaAdvisor() {
       {result && (
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>Requirements</h2>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, background: '#f9fafb', padding: 14, borderRadius: 8, overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <FormattedAIReport response={result} />
         </div>
       )}
     </div>

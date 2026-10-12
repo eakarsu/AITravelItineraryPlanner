@@ -1,3 +1,5 @@
+import TravelPresets from '../components/TravelPresets';
+import FormattedAIReport from "../components/FormattedAIReport";
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -55,6 +57,7 @@ export default function InsuranceRecommender() {
       <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>🛡️ Travel Insurance Recommender</h1>
       <p style={{ color: '#64748b', marginBottom: 24, fontSize: 14 }}>Get a recommended coverage tier and estimated cost based on your trip profile.</p>
 
+      <TravelPresets presets={[{ label: 'Japan family trip', values: { destination: 'Japan', duration_days: 14, traveler_age: 42, activities: 'city walks, rail travel', pre_existing_conditions: 'Asthma; confirm coverage with insurer', trip_cost_usd: 5500 } }, { label: 'Peru hiking trip', values: { destination: 'Peru', duration_days: 12, traveler_age: 31, activities: 'high-altitude hiking, sightseeing', pre_existing_conditions: 'None reported', trip_cost_usd: 3800 } }, { label: 'Italy senior trip', values: { destination: 'Italy', duration_days: 21, traveler_age: 68, activities: 'museum visits, walking tours', pre_existing_conditions: 'Hypertension; confirm coverage with insurer', trip_cost_usd: 7200 } }]} disabled={loading} onChoose={(values) => setForm((current) => ({ ...current, ...values }))} />
       <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           <div>
@@ -93,9 +96,7 @@ export default function InsuranceRecommender() {
       {result && (
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>Recommendation</h2>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, background: '#f9fafb', padding: 14, borderRadius: 8, overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <FormattedAIReport response={result} />
         </div>
       )}
     </div>
